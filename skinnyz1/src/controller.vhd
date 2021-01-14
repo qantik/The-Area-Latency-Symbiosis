@@ -17,7 +17,7 @@ port ( Clk:             in std_logic;
        rc_bit:          out std_logic;
        tick:            out std_logic;
        add_key:         out std_logic;
-       rot:             out std_logic;
+       rot:             out std_logic
        );
 end entity controller;
 
