@@ -13,18 +13,6 @@ end testbench;
 
 architecture tb of testbench is   
 
-function to_string ( a: std_logic_vector) return string is
-    variable b : string (1 to a'length) := (others => NUL);
-    variable stri : integer := 1; 
-    begin
-        for i in a'range loop
-            b(stri) := std_logic'image(a((i)))(2);
-        stri := stri+1;
-        end loop;
-    return b;
-end function;
-
-
     constant clkphase: time:= 50 ns;    
     constant resetactivetime:    time:= 25 ns;
     
@@ -65,6 +53,7 @@ end function;
     signal k2_dbg         : std_logic_vector(127 downto 0);
     signal k3_dbg         : std_logic_vector(127 downto 0);
     signal ct_dbg         : std_logic_vector(127 downto 0);
+    signal cont_flag        : boolean := true;
     
 
 begin
@@ -98,25 +87,18 @@ begin
                   k2_bit => k2_bit,
                   k3_bit => k3_bit
                   );
-
-    process
-    begin
-        clk <= '1'; wait for clkphase;
-        clk <= '0'; wait for clkphase;
-    end process;
-  -- obtain stimulus and apply it to MUT
+	process
+	begin
+		if cont_flag then
+			clk <= '1'; 
+			wait for clkphase;
+			clk <= '0'; 
+			wait for clkphase;
+		else
+			wait;
+		end if;
+	end process;
   
-  tag_buffer: process (clk)
-  begin
-    if rising_edge(clk) then
-        last_128_st <= last_128_st(126 downto 0) & statebit;
-        k1_dbg <= k1_dbg(126 downto 0) & k1_bit;
-        k2_dbg <= k2_dbg(126 downto 0) & k2_bit;
-        k3_dbg <= k3_dbg(126 downto 0) & k3_bit;
-        ct_dbg <= ct_dbg(126 downto 0) & ct_bit;
-    end if;
-  end process;
-  ----------------------------------------------------------------------------
     a : process
         variable INLine         : line;
         variable tmp_ct         : std_logic_vector(127 downto 0);
@@ -146,13 +128,11 @@ begin
         variable last_partial_ad  : std_logic;
         variable last_partial_msg : std_logic;
     begin
-        --file_open(testinput, "./in_paef", read_mode);
-        file_open(testinput, "./in_aead", read_mode);
-        --file_open(testinput, "../../test_generator/test_vectors/in_paef", read_mode);
-        file_open(testoutput, "./res", write_mode);
-        --file_open(correct_v, "./out_paef_swapped", read_mode);
-        file_open(correct_v, "./out_aead", read_mode);
-        test_count := 0;
+        cont_flag <= true;
+		file_open(testinput, "Testinput.txt", read_mode);
+		file_open(testoutput, "tb_output.txt", write_mode);
+		file_open(correct_v, "Testoutput.txt", read_mode);
+		test_count := 0;
         appli_loop : while not (endfile(testinput)) loop
         
             reset      <= '0';
@@ -185,21 +165,21 @@ begin
             if ctr = ad_count or ctr = msg_count + ad_count then last_block <= '1'; end if;
             inner_loop : loop
             
-                    
-                
                 wait until rising_edge(clk);
                 
                 if cipher_ready = '1' or ctx_ctr > 0 then
                     ctx_store(127 - ctx_ctr) := ciphertext;
                     if ctx_ctr = 127 then
-                        hwrite(INLine,  ctx_store); writeline(testoutput, INLine);
+                        
                         -- in order to spot the testbench on fail
                         readline(correct_v, INLine); hread(INLine, tmp_ct);
                         if read_ctr = msg_count and (last_partial_msg = '1')  then
                             assert tmp_ct(127 downto 64)  = ctx_store (127 downto 64) report "CT (upper) does not match\n" severity failure;
+                            ctx_store(63 downto 0) := X"0000000000000000"; -- In the case of incomplete block, we add extra 8 bytes of 0x00 so that later makefile diff works perfectly.
                         else
                             assert tmp_ct  = ctx_store report "CT (full) does not match\n" severity failure;
-                        end if; 
+                        end if;
+                        hwrite(INLine,  ctx_store); writeline(testoutput, INLine); 
                         read_ctr := read_ctr + 1;
                     end if;
                     ctx_ctr := (ctx_ctr + 1) mod 128;
@@ -263,10 +243,10 @@ begin
             end loop inner_loop;
             
         test_count := test_count + 1;
+        report "vector # " & integer'image(test_count) & ": passed";
         end loop appli_loop;
-        
-        assert false report "DONE" severity failure;
         wait until clk'event and clk = '1';
+        cont_flag <= false;
         wait;
     end process a;
 end tb;
