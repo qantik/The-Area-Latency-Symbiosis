@@ -56,7 +56,7 @@ begin
     key_pipeline_tk0:	    entity key_pipeline1(behav) port map (key0, Clk, init, swap_ctrl_k, KeyBit(0));
     key_pipeline_tk1:	    entity key_pipeline2(behav) port map (key1, Clk, init, swap_ctrl_k, lfsr_ctl2, KeyBit(1));
     
-    roundkeybit <= key0 xor key1 xor key2;
+    roundkeybit <= key0 xor key1;
 
 
 
