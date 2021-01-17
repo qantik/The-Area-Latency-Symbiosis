@@ -9,10 +9,10 @@ void rand_vec(uint8_t *vec, int n) {
     for (int i = 0; i < n; i++) vec[i] = rand() % 256;
 }
 
-void print_vec(uint8_t *vec, int n, char *label) {
-    printf("%s", label);
-    for (int i = 0; i < n; i++) printf("%02X", vec[i]);
-    putchar('\n');
+void print_vec(FILE *in, uint8_t *vec, int n, char *label) {
+    fprintf(in, "%s", label);
+    for (int i = 0; i < n; i++) fprintf(in, "%02X", vec[i]);
+    fprintf(in, "\n");
 }
 
 int main(void) {
@@ -26,17 +26,22 @@ int main(void) {
     /* putchar('\n'); */
 
     time(0);
+    
+    FILE *in0 = fopen("Testinput.txt", "w");
+    FILE *out1 = fopen("Testoutput.txt", "w");
 
     for (int i = 0; i < 100; i++) {
         uint8_t k[16]; rand_vec(k, 16);
         uint8_t p[16]; rand_vec(p, 16);
         uint8_t c[16]; giftb128(p, k, c);
 
-        print_vec(k, 16, "");
-        print_vec(p, 16, "");
-        print_vec(c, 16, "");
-        putchar('\n');
+		print_vec(in0, k, 16, "");
+        print_vec(in0, p, 16, "");
+        print_vec(out1, c, 16, "");
     }
+    
+    fclose(in0);
+	fclose(out1);
     
     return EXIT_SUCCESS;
 }
