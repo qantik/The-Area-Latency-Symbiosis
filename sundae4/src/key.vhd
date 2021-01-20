@@ -5,7 +5,7 @@ use ieee.numeric_std.all;
 entity key is
     port (clk   : in std_logic;
           
-          key : in std_logic_vector(3 downto 0);
+          key_in : in std_logic_vector(3 downto 0);
 
           stall : in std_logic;
           round : in std_logic_vector(5 downto 0);
@@ -55,7 +55,7 @@ begin
         end if;
     end process mux;
 
-    pipe : process(key_curr, round, cycle, round_i, cycle_i, key)
+    pipe : process(key_curr, round, cycle, round_i, cycle_i, key_in)
         variable key_tmp : std_logic_vector(127 downto 0);
         variable key0    : std_logic_vector(3 downto 0);
         
@@ -118,7 +118,7 @@ begin
 	    if stall = '1' then
                 key0 := key_tmp(127 downto 124);
             else
-                key0 := key;
+                key0 := key_in;
     	    end if;
         else
             key0 := key_tmp(127 downto 124);
