@@ -9,19 +9,19 @@ entity SKINNY is
     port (clk     : in std_logic;
           reset_n : in std_logic;
           
-	  key   : in std_logic_vector(7 downto 0);
-	  nonce : in std_logic_vector(7 downto 0);
+	      key   : in std_logic_vector(7 downto 0);
+	      nonce : in std_logic_vector(7 downto 0);
           
           data         : in std_logic_vector(7 downto 0);
           last_block   : in std_logic;
           last_partial : in std_logic;
           
-	  empty_ad     : in std_logic;
+	      empty_ad     : in std_logic;
           empty_msg    : in std_logic;
           
-	  ready_block  : out std_logic;
-	  ready_tag    : out std_logic;
-	  ready_cipher : out std_logic;
+	      ready_block  : out std_logic;
+	      ready_tag    : out std_logic;
+	      ready_cipher : out std_logic;
 
           tag   : out std_logic_vector(7 downto 0);
           ct    : out std_logic_vector(7 downto 0));
@@ -102,7 +102,7 @@ begin
     ct  <= void;
     tag <= void xor auth_out;
     
-    tk0_mux : process(all)
+    tk0_mux : process(count, kfsr_out, flag)
         variable count_i : integer range 0 to 15;
     begin
         count_i := to_integer(unsigned(count));
@@ -115,7 +115,7 @@ begin
         end if;
     end process;
 
-    flag_mux : process(all)
+    flag_mux : process(st, last_partial, empty_msg)
     begin
 	if st = st_ad then
 	    flag <= "00000010";
@@ -137,14 +137,10 @@ begin
         end if;
     end process;
 
-    pt_mux : process(all)
+    pt_mux : process(st, data, last_block, last_partial, sigma_out, kfsr_out, flag, count)
     begin
 	PTByte <= data;
 	if round = "000000" then
-	    --if (st = st_ad) or
-	    --   (st = st_msg and last_block = '0') or
-	    --   (st = st_msg and last_block = '1' and last_partial = '0') or
-	    --   (st = st_tag and empty_ad = '1' and empty_msg = '1') then
 	    if (st = st_msg and last_block = '1' and last_partial = '1') then
 	        PTByte <= (others => '0');
 	    elsif st = st_tag then
@@ -159,7 +155,7 @@ begin
 	end if;	
     end process;
 
-    auth_mux : process(all)
+    auth_mux : process(st, epoch, auth_out, void, empty_ad, empty_msg, count)
     begin
 	auth_in <= auth_out;	    
 	if round = "000000" then
@@ -175,7 +171,7 @@ begin
 	end if;
     end process;
     
-    sigma_mux : process(all)
+    sigma_mux : process(st, data, epoch, sigma_out, empty_msg, empty_ad, count, last_partial, round)
     begin
 	sigma_in <= sigma_out;	    
 	if round = "000000" then
@@ -183,36 +179,36 @@ begin
 	       (st = st_tag and empty_ad = '1' and empty_msg = '1')) then
 	       sigma_in <= (others => '0');
 	    elsif st = st_msg then
-		if epoch = '0' and empty_ad = '1' then
-		    if last_partial = '0' then
-		        sigma_in <= data;
+		    if epoch = '0' and empty_ad = '1' then
+		        if last_partial = '0' then
+		            sigma_in <= data;
+		        else
+		            sigma_in <= (others => '0');
+		        end if;
 		    else
-		        sigma_in <= (others => '0');
+		        if last_partial = '0' then
+		            sigma_in <= sigma_out xor data;
+		        end if;
 		    end if;
-		else
-		    if last_partial = '0' then
-		        sigma_in <= sigma_out xor data;
-		    end if;
-		end if;
 	    end if;
 	end if;
     end process;
 
-    kfsr_mux : process(all)
+    kfsr_mux : process(st, count, round, last_block)
     begin
-	kfsr_init <= '0';
-	kfsr_upd  <= '0';
-	if st = st_init then
-	    kfsr_init <= '1';
+	    kfsr_init <= '0';
+	    kfsr_upd  <= '0';
+	    if st = st_init then
+	        kfsr_init <= '1';
         elsif st = st_ad and count = "1111" and round = "110111" and last_block = '1'then
-	    kfsr_init <= '1';
-	end if;
+	        kfsr_init <= '1';
+	    end if;
 
-	if st = st_ad and last_block = '0' and count = "1111" and round = "110111" then
-	    kfsr_upd  <= '1';
-	elsif st = st_msg and count = "1111" and round = "110111" then
-	    kfsr_upd  <= '1';
-	end if;
+	    if st = st_ad and last_block = '0' and count = "1111" and round = "110111" then
+	        kfsr_upd  <= '1';
+	    elsif st = st_msg and count = "1111" and round = "110111" then
+	        kfsr_upd  <= '1';
+	    end if;
     end process;
 
     fsm_reg : process(clk, reset_n)
@@ -241,7 +237,7 @@ begin
         end if;
     end process;
     
-    fsm : process(all)
+    fsm : process(st, round, count, empty_ad, empty_msg, last_block, last_partial)
     begin
 
         st_next <= st;

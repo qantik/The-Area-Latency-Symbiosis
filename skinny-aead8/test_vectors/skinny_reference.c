@@ -27,7 +27,7 @@
 #include <string.h>
 #include <stdint.h>
 
-#define DEBUG
+//#define DEBUG
 
 // Table that encodes the parameters of the various SKINNY versions:
 // (block size, key size, number of rounds)
