@@ -88,17 +88,17 @@ def executeSwaps(S, round, count):
         if count in cycles1[j] and not disableSwaps1:
             (x, y) = swaps1[j]
             (S[x], S[y]) = (S[y], S[x])
-            # print("swapping 1 round :" + str(round) + "\tcylce: " + str(count) )
+            # print("swapping 1 round :" + str(round) + "\tcycle: " + str(count) )
     for j in range(len(swaps2)):
         if count in cycles2[j] and not disableSwaps2:
             (x, y) = swaps2[j]
             (S[x], S[y]) = (S[y], S[x])
-            # print("swapping 2 round :" + str(round) + "\tcylce: " + str(count) )
+            # print("swapping 2 round :" + str(round) + "\tcycle: " + str(count) )
     for j in range(len(swaps3)):
         if count in cycles3[j] and not disableSwaps3:
             (x, y) = swaps3[j]
             (S[x], S[y]) = (S[y], S[x])
-            # print("swapping 3 round :" + str(round) + "\tcylce: " + str(count) )
+            # print("swapping 3 round :" + str(round) + "\tcycle: " + str(count) )
     return S
 
 def rotate_pipeline(S):
@@ -143,8 +143,10 @@ y = []
 for d in x:
     # l = format(int(d, 16), '0<4b')
     l ='{:04b}'.format(int(d, 16))
-    y += list(reversed(l))
+    #y += list(reversed(l))
+    y += list(l)
 
+print(y)
 #x = "F0E0D0C0B0A090807060504030201000"
 # inputbits = list(format(int(x, 16), '0>128b'))
 
@@ -156,7 +158,7 @@ result = apply_permutation(inputbits, GIFT)
 #results = [apply_permutation(x, GIFT) for x in inputbits]
 # results = results[:-1] # the last 64 bits are not used, they are placeholder
 
-K = simulate_permutation_over_pipeline(inputbits, 2)
+K = simulate_permutation_over_pipeline(inputbits, 1)
 
 # print(swaps1)
 # print(swaps2)

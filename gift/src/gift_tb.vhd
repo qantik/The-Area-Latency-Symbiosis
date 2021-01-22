@@ -22,12 +22,48 @@ architecture bench of gift_tb is
     signal ct    : std_logic;
 
     --constant tmp : std_logic_vector(127 downto 0) := X"08090A0B040506070C0D0E0F00010203";
-    constant tmp : std_logic_vector(127 downto 0) := X"000102030C0D0E0F0405060708090A0B";
-    constant ppp : std_logic_vector(127 downto 0) := X"000102030405060708090A0B0C0D0E0F";
-    signal cmp   : std_logic_vector(127 downto 0);
+    --constant kmp : std_logic_vector(127 downto 0) := X"000102030C0D0E0F0405060708090A0B";
+    --constant kmp : std_logic_vector(127 downto 0) := X"000102030405060708090A0B0C0D0E0F";
+    --constant ppp : std_logic_vector(127 downto 0) := X"000102030405060708090A0B0C0D0E0F";
+    --constant kmp : std_logic_vector(127 downto 0) := X"00000000000000000000000000000000";
+    constant ppp : std_logic_vector(127 downto 0) := X"F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0";
+    --constant kmp : std_logic_vector(127 downto 0) := X"F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0";
+    constant kmp : std_logic_vector(127 downto 0) := X"7FFF80007FFF80007FFF80007FFF8000";
+
+    signal cont_flag : boolean := true;
+
+    file testinput, testoutput, tb_output : text;
     
     constant clk_period   : time := 100 ns;
     constant reset_period : time := 25 ns;
+    
+    --procedure extract_key(variable k : in std_logic_vector(127 downto 0)) is
+    --    variable t : std_logic_vector(63 downto 0);
+    --begin
+    --    for i in 0 to 31 loop
+    --        t(i*2)   := k(0 + 4*i);
+    --        t(i*2+1) := k(1 + 4*i);
+    --    end loop;
+    --    report to_hstring(k);
+    --    report to_hstring(t);
+    --end procedure extract_key;
+    
+    procedure reord_key (variable k : inout std_logic_vector(127 downto 0)) is
+        variable t : std_logic_vector(127 downto 0);
+    begin
+        for i in 0 to 15 loop
+            t((127-1)-(4*i)) := k(127-32-i);
+            t((127-2)-(4*i)) := k(127-96-i);
+            t((127-3)-(4*i)) := k(127-0-i);
+            t((127-4)-(4*i)) := k(127-64-i);
+            
+            t((127-64-1)-(4*i)) := k(127-48-i);
+            t((127-64-2)-(4*i)) := k(127-112-i);
+            t((127-64-3)-(4*i)) := k(127-16-i);
+            t(((127-64-4)-(4*i)) mod 128) := k(127-80-i);
+        end loop;
+	    k := t;
+    end procedure reord_key;
 
 begin
 
@@ -35,59 +71,97 @@ begin
 
     clock : process
     begin
-        clk <= '0';
-        wait for clk_period/2;
-        clk <= '1';
-        wait for clk_period/2;
+        if cont_flag then
+            clk <= '0';
+            wait for clk_period/2;
+            clk <= '1';
+            wait for clk_period/2;
+        else
+            wait;
+        end if;
     end process clock;
 
     test : process
-        file out_file     : text;
         variable out_line : line;
+        variable vec_line : line;
+        variable k_vec    : std_logic_vector(127 downto 0);
+        variable p_vec    : std_logic_vector(127 downto 0);
+        variable c_vec    : std_logic_vector(127 downto 0);
+        variable tmp      : std_logic_vector(127 downto 0);
+        variable counter  : integer;
     begin
-        file_open(out_file, "./out.txt", write_mode);
-        
-        pt  <= ppp(127);
-        key <= tmp(127);
+        file_open(testinput, "Testinput.txt", read_mode);
+        file_open(testoutput, "Testoutput.txt", read_mode);
+        file_open(tb_output, "tb_output.txt", write_mode);
 
-        reset_n <= '0';
-        wait for reset_period;
-        reset_n <= '1';
+        cont_flag <= true;
+        counter   := 0;
 
-        for i in 1 to 127 loop
-            wait until rising_edge(clk);
-            -- key <= k_tmp((128-i)*8-1 downto (127-i)*8);
-            pt  <= ppp(127-i);
-            key <= tmp(127-i);
-        end loop;
+        while not endfile(testinput) loop
+            counter := counter + 1;
+
+            readline(testinput, vec_line);
+            hread(vec_line, k_vec);
+            reord_key(k_vec);
             
-        wait until rising_edge(clk);
-        pt  <= '0';
-        key <= '0';
+            readline(testinput, vec_line);
+            hread(vec_line, p_vec);
 
-        wait until ready = '1';
-        for i in 0 to 127 loop
-           wait until rising_edge(clk);
-           cmp(127-i) <= ct;
+            readline(testoutput, vec_line);
+            hread(vec_line, c_vec);
+        
+            --pt  <= ppp(127);
+            --key <= kmp(127);
+            pt  <= p_vec(127);
+            key <= k_vec(127);
+
+            reset_n <= '0';
+            wait for reset_period;
+            reset_n <= '1';
+
+            for i in 1 to 127 loop
+                wait until rising_edge(clk);
+                --pt  <= ppp(127-i);
+                --key <= kmp(127-i);
+                pt  <= p_vec(127-i);
+                key <= k_vec(127-i);
+            end loop;
+                    
+            wait until rising_edge(clk);
+            pt  <= '0';
+            key <= '0';
+                
+            --for i in 0 to 5 loop
+            --    for j in 0 to 127 loop
+            --        wait until rising_edge(clk);
+            --        pt  <= '0';
+            --        key <= '0';
+            --        tmp(127-j) := ct;
+            --    end loop;
+            --    extract_key(tmp);
+            --end loop;
+
+            wait until ready = '1';
+            for i in 0 to 127 loop
+               wait until rising_edge(clk);
+               tmp(127-i) := ct;
+            end loop;
+
+            hwrite(vec_line, tmp);
+            writeline(tb_output, vec_line);
+            assert tmp = c_vec report "incorrect ciphertext" severity failure;
+            report "vector # " & integer'image(counter) & ": passed";
         end loop;
-   
-        --for r in 1 to 10 loop
-        --    for i in 1 to 128 loop
-        --        wait until rising_edge(clk);
-        --        if i >= 1 and i <= 64 then
-        --            cmp(64-i) <= ct;
-        --        end if;
-        --    end loop;
-        --end loop;
+  
+        wait for clk_period;
+        
+        file_close(testinput);
+        file_close(testoutput);
+        file_close(tb_output);
 
-        write(out_line, cmp);
-        writeline(out_file, out_line);
-        file_close(out_file);
-
-        wait for 1*clk_period;
-
-        assert false report "test finished" severity failure;
-
+        cont_flag <= false;
+        
+        wait;
     end process test;
 
 end architecture bench;
