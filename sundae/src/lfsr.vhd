@@ -5,6 +5,8 @@ use ieee.numeric_std.all;
 entity lfsr is
     port (clk     : in std_logic;
           reset_n : in std_logic;
+
+          stall : in std_logic;
     
           round : in std_logic_vector(5 downto 0);
           cycle : in std_logic_vector(6 downto 0);
@@ -58,20 +60,22 @@ begin
         rc <= '0';
         s0 := '0';
 
+        if round_i = 0 and cycle_i = 127 then
+            --s0 := st_tmp(5);
+            rc <= st_tmp(5);
+            st_tmp := "000000";
         --if round_i > 0 then
-            if round_i = 1 and cycle_i = 0 then
-                st_tmp := "000000";
-            elsif cycle_i = 96 then
+        else
+            if cycle_i = 96 then
                 s0 := st_tmp(5) xnor st_tmp(4);
                 rotate(st_tmp, s0);
                 rc <= '1';
-            --elsif cycle_i >= 26 and cycle_i < 32 then
             elsif cycle_i >= 122 and cycle_i < 128 then
                 s0 := st_tmp(5);
                 rc <= s0;
                 rotate(st_tmp, s0);
             end if;
-        --end if;
+        end if;
 
         st_next <= st_tmp;
 

@@ -5,10 +5,9 @@ use ieee.numeric_std.all;
 entity key is
     port (clk   : in std_logic;
           
-          key : in std_logic;
+          key_in : in std_logic;
 
-          last_block : std_logic;
-          stall      : unsigned(1 downto 0);
+          stall : in std_logic;
 
           round : in std_logic_vector(5 downto 0);
           cycle : in std_logic_vector(6 downto 0);
@@ -49,7 +48,7 @@ begin
         end if;
     end process fsm;
 
-    mux : process(round_i, cycle_i, key_curr)
+    mux : process(cycle, cycle_i, key_curr)
     begin
         round_key <= '0';
         if cycle_i >= 32 and cycle_i < 96 then
@@ -57,37 +56,40 @@ begin
         end if;
     end process mux;
 
-    pipe : process(key_curr, round, cycle)
+    pipe : process(key_curr, key_next, round, cycle, round_i, cycle_i, key_in)
         variable key_tmp : std_logic_vector(127 downto 0);
         variable key0    : std_logic;
-        
     begin
         key_tmp := key_curr;
 
-        if round_i > 1 and last_block = '0' and stall /= 2 then
+        if round_i > 1 then
             if (cycle_i >= 32 and cycle_i < 44) or (cycle_i >= 48 and cycle_i < 60) then
-                swap(key_tmp(28), key_tmp(32));
+                swap(key_tmp(27), key_tmp(31));
             end if;
             if cycle_i >= 44 and cycle_i < 52 then
-                swap(key_tmp(36), key_tmp(44));
+                swap(key_tmp(35), key_tmp(43));
             end if;
             if cycle_i >= 52 and cycle_i < 66 then
-                swap(key_tmp(50), key_tmp(52));
+                swap(key_tmp(49), key_tmp(51));
             end if;
         end if;
 
-        if round_i > 0 and last_block = '0' and stall /= 2 then
+        if round_i > 0 then
           if cycle_i >= 32 and cycle_i < 96 then
-              swap(key_tmp(64), key_tmp(0));
+              swap(key_tmp(63), key_tmp(127));
           end if;
           if cycle_i >= 96 and cycle_i < 128 then
-              swap(key_tmp(96), key_tmp(0));
+              swap(key_tmp(95), key_tmp(127));
           end if;
         end if;
 
         -- determine wrap-around bit.
-        if round_i = 0 and stall = 0 then
-            key0 := key;
+        if round_i = 0 then
+            if stall = '1' then
+                key0 := key_tmp(127);
+            else
+                key0 := key_in;
+            end if;
         else
             key0 := key_tmp(127);
         end if;
