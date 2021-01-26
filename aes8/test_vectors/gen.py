@@ -24,7 +24,7 @@ testoutput = open("Testoutput.txt", "w")
 
 
 for j in range(100):
-    cipher = AES.new(unhex(k))
+    cipher = AES.new(unhex(k), AES.MODE_ECB)
     ct = hex(cipher.encrypt(unhex(pt)))
     testinput.write(pt+"\n")
     testinput.write(k+"\n")
