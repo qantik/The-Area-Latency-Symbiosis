@@ -6,17 +6,6 @@ use std.textio.all;
 use work.all;
 
 entity skinny_aead_tb is
-
-    function vector_equal(a, b : std_logic_vector) return boolean is
-    begin
-        for i in 0 to 127 loop
-            if a(i) /= b(i) then
-                return false;
-            end if;
-        end loop;
-        return true;
-    end;
-
 end;
 
 architecture test of skinny_aead_tb is
@@ -40,12 +29,13 @@ architecture test of skinny_aead_tb is
     signal ready_full        : std_logic;
     signal cipher_ready      : std_logic;
     signal tag_ready         : std_logic;
+    signal cont_flag       : boolean := true;
 
     signal ciphertext : std_logic ;
     signal tag        : std_logic ;
 
     file in_vecs : text;
-
+    file tb_output : text;
     constant clk_period   : time := 100 ns;
     constant reset_period : time := 25 ns;
 
@@ -71,10 +61,14 @@ begin
 
     clk_process : process
     begin
-        clk <= '1';
-        wait for clk_period/2;
-        clk <= '0';
-        wait for clk_period/2;
+        if cont_flag then
+            clk <= '1';
+            wait for clk_period/2;
+            clk <= '0';
+            wait for clk_period/2;
+        else
+            wait;
+        end if;
     end process;
     
     test : process
@@ -89,7 +83,7 @@ begin
         variable vec_ad, vec_msg           : std_logic_vector(127 downto 0);
         variable vec_cipher, vec_tag       : std_logic_vector(127 downto 0);
         variable vec_nonce:                  std_logic_vector(127 downto 0);
-
+        variable cmp                       : std_logic_vector(127 downto 0);
         variable round : integer := 1;
 
 	procedure nodata(constant void : in integer := 0) is
@@ -112,9 +106,22 @@ begin
             wait for clk_period;
             end loop;
  
-            wait for 7168*clk_period-reset_period;
+            readline(in_vecs, vec_line);
+            hread(vec_line, vec_tag);
+	    
+
+
+            wait for 7040*clk_period-reset_period;
  
-   
+            for i in 0 to 127 loop
+            wait until falling_edge(clk);
+            
+            cmp(127-i) := tag;
+	        assert tag = vec_tag(127-i) report "incorrect tag" severity failure;
+            end loop;
+                 wait for clk_period/2;
+        hwrite(vec_line, cmp);
+        writeline(tb_output, vec_line);
  
 	end procedure;
 	
@@ -134,7 +141,7 @@ begin
  
   
 
-	    for i in 1 to msg_blocks-1 loop
+	    for j in 1 to msg_blocks-1 loop
  
                 last_block   <= '0';
                 last_partial <= '0';
@@ -186,7 +193,26 @@ begin
 	             nonce   <= vec_nonce(i);
                      wait for clk_period;
                 end loop;
-                wait for 7168*clk_period;
+
+            readline(in_vecs, vec_line);
+            hread(vec_line, vec_tag);
+	    
+
+
+            wait for 7040*clk_period;
+ 
+            for i in 0 to 127 loop
+            wait until falling_edge(clk);
+            
+            cmp(127-i) := tag;
+	        assert tag = vec_tag(127-i) report "incorrect tag" severity failure;
+            end loop;
+         wait for clk_period/2;
+        hwrite(vec_line, cmp);
+        writeline(tb_output, vec_line);
+
+
+              --  wait for 7168*clk_period;
  	end procedure;
         
         procedure nomsg(constant ad_blocks : in integer;
@@ -199,7 +225,7 @@ begin
             wait for reset_period;
             reset <= '1';
             
-            for i in 1 to ad_blocks-1 loop
+            for j in 1 to ad_blocks-1 loop
  
                 last_block   <= '0';
                 last_partial <= '0';
@@ -234,7 +260,22 @@ begin
 	             nonce   <= vec_nonce(i);
                      wait for clk_period;
                 end loop;
-                wait for 7168*clk_period;
+            readline(in_vecs, vec_line);
+            hread(vec_line, vec_tag);
+	    
+
+
+            wait for 7040*clk_period;
+ 
+            for i in 0 to 127 loop
+            wait until falling_edge(clk);
+            
+            cmp(127-i) := tag;
+	        assert tag = vec_tag(127-i) report "incorrect tag" severity failure;
+            end loop;
+        wait for clk_period/2;
+        hwrite(vec_line, cmp);
+        writeline(tb_output, vec_line);
  
 
 	end procedure;
@@ -252,7 +293,7 @@ begin
             reset <= '1';
             
 
-            for i in 1 to ad_blocks-1 loop
+            for j in 1 to ad_blocks-1 loop
  
                 last_block   <= '0';
                 last_partial <= '0';
@@ -281,7 +322,7 @@ begin
                 wait for 7168*clk_period -reset_period;
 
 
-	    for i in 1 to msg_blocks-1 loop
+	    for j in 1 to msg_blocks-1 loop
  
                 last_block   <= '0';
                 last_partial <= '0';
@@ -333,7 +374,23 @@ begin
 	             nonce   <= vec_nonce(i);
                      wait for clk_period;
                 end loop;
-                wait for 7168*clk_period;
+	    readline(in_vecs, vec_line);
+            hread(vec_line, vec_tag);
+	    
+
+
+            wait for 7040*clk_period;
+ 
+            for i in 0 to 127 loop
+
+             wait until falling_edge(clk);
+             cmp(127-i) := tag;
+	     assert tag = vec_tag(127-i) report "incorrect tag" severity failure;
+            --wait for clk_period;
+            end loop;
+            wait for clk_period/2;
+        hwrite(vec_line, cmp);
+        writeline(tb_output, vec_line);
 
 
 
@@ -344,13 +401,13 @@ begin
 	end procedure;
 
     begin
-
-        file_open(in_vecs, "./test_vectors/IN_1000", read_mode);
-
+		cont_flag <= true;
+        file_open(in_vecs, "Testinput.txt", read_mode);
+		file_open(tb_output, "tb_output.txt", write_mode);
         while not endfile(in_vecs) loop
         --for z in 1 to 1 loop
 	    --report "round: " & integer'image(round); round := round + 1;
-            
+                        round := round + 1;
 	    readline(in_vecs, vec_line);
             read(vec_line, vec_in_id); read(vec_line, vec_space);
             read(vec_line, vec_num_ad); read(vec_line, vec_space);
@@ -373,8 +430,10 @@ begin
 	    else
 		full(vec_num_ad, vec_num_msg, vec_ad_part, vec_msg_part);
 	    end if;
-
+            report "vector # " & integer'image(round) & ": passed";
         end loop;
+        cont_flag <= false;
+        wait;
 
         --assert false report "test passed" severity failure;
 
