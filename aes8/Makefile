@@ -1,7 +1,6 @@
 SRC_PATH    = src
 BUILD_DIR   = build
 VHDL_SRCS   = \
-				$(SRC_PATH)/mix_col_slice.vhd \
 				$(SRC_PATH)/mc.vhd \
 				$(SRC_PATH)/sbox_bonus.vhd \
 				$(SRC_PATH)/controller.vhd \

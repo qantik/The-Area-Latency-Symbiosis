@@ -5,24 +5,27 @@ use ieee.numeric_std.all;
 use std.textio.all;
 use work.all;
 
-entity sbox is 
-    port ( 
-            INP : in std_logic_vector(7 downto 0);
-            OUP : out std_logic_vector(7 downto 0));
+entity sbox is port (
+    INP : in std_logic_vector(7 downto 0);
+    OUP : out std_logic_vector(7 downto 0)
+    );
 end entity sbox;
 
--- Taken from Maximov's CHES 2019 paper
--- The "bonus" version
+-- This S-box impl. is from "New Circuit Minimization Techniques for Smaller and Faster AES SBoxes"
+-- by Alexander Maximov and Patrik Ekdahl 
+-- TCHES 2019 
+-- The is the "bonus" version from their paper
 
 architecture maximov of sbox is 
 
-    signal Z24, Z66, Q0, Q1, Q2, Q3, Q4, Q5, Q6, Q7, Q8, Q9, Q10, Q11, Q12, Q13, Q14, Q15, Q16, Q17 : std_logic;
-    signal T0, T1, T2, T3, T4, T10, T11, T12, T13, T20, T21, T22, X0, X1, X2, X3, Y0, Y1, Y2, Y3 : std_logic;
-    signal Y00, Y01, Y02, Y13, Y23, N0, N1, N2, N3, N4, N5, N6, N7, N8, N9, N10, N11, N12, N13, N14, N15, N16, N17 : std_logic;
-    signal H0, H1, H2, H3, H4, H5, H6, H7, H8, H9, H10, H11, H12, H13, H14, H15, H16, H17, H18 : std_logic;
-    signal R0, R1, R2, R3, R4, R5, R6, R7 : std_logic;
-    signal U0, U1, U2, U3, U4, U5, U6, U7 : std_logic;
-begin  
+    signal Z24, Z66, Q0, Q1, Q2, Q3, Q4, Q5, Q6, Q7, Q8, Q9, Q10, Q11, Q12, Q13, Q14, Q15, Q16, Q17: std_logic;
+    signal T0, T1, T2, T3, T4, T10, T11, T12, T13, T20, T21, T22, X0, X1, X2, X3, Y0, Y1, Y2, Y3: std_logic;
+    signal Y00, Y01, Y02, Y13, Y23, N0, N1, N2, N3, N4, N5, N6, N7, N8, N9, N10, N11, N12, N13, N14, N15, N16, N17: std_logic;
+    signal H0, H1, H2, H3, H4, H5, H6, H7, H8, H9, H10, H11, H12, H13, H14, H15, H16, H17, H18: std_logic;
+    signal R0, R1, R2, R3, R4, R5, R6, R7: std_logic;
+    signal U0, U1, U2, U3, U4, U5, U6, U7: std_logic;
+
+begin
 
     U0 <= INP(7);
     U1 <= INP(6);
@@ -32,8 +35,7 @@ begin
     U5 <= INP(2);
     U6 <= INP(1);
     U7 <= INP(0);
-    
-    
+
     -- below: edited and pasted from the paper
     Z24 <= U3 xor U4;
     Q17 <= U1 xor U7;
