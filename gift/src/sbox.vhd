@@ -2,8 +2,9 @@ library ieee;
 use ieee.std_logic_1164.all;
 
 entity sbox is port (
-    InpxDI:     in  std_logic_vector(3 downto 0);
-    OupxDO:     out std_logic_vector(3 downto 0));
+    InpxDI:     in std_logic_vector(3 downto 0);
+    OupxDO:     out std_logic_vector(3 downto 0)
+    );
 end sbox;
 
 architecture parallel of sbox is
