@@ -120,7 +120,7 @@ int main() {
     unsigned char incomplete_ad, incomplete_m, odd_ad_blocks;
     int i,j;
    	
-	for(j=0; j<100; j++) {
+	for(j=0; j<20; j++) {
 	    random_aead_gen(c, m, &mlen, ad, &adlen, npub, k, &incomplete_ad, &incomplete_m, &odd_ad_blocks, j);
         if (j >= TEST_NUMBER) {
             save_aead(in0, out1, c, m, &mlen, ad, &adlen, npub, k, &incomplete_ad, &incomplete_m, &odd_ad_blocks);

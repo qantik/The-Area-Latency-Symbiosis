@@ -1,23 +1,22 @@
 library ieee;
 use ieee.std_logic_1164.all;
- 
 use ieee.numeric_std.all;
 use std.textio.all;
 use work.all;
 
-entity lfsr is 
-port ( Clk:             in std_logic; 
-       Rst:             in std_logic; 
-       tick:            in std_logic;
-       rot:             in std_logic;
-       rcon:            out std_logic_vector(5 downto 0)
-       );
+entity lfsr is port (
+    Clk:             in std_logic;
+    Rst:             in std_logic;
+    tick:            in std_logic;
+    rot:             in std_logic;
+    rcon:            out std_logic_vector(5 downto 0)
+    );
 end entity lfsr;
 
 
 architecture behav of lfsr is
 
-    signal rc: std_logic_vector(5 downto 0);
+    signal rc:      std_logic_vector(5 downto 0);
 
 begin
 
@@ -38,4 +37,3 @@ begin
     end process;
 
 end architecture;
-
