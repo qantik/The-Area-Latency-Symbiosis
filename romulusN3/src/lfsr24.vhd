@@ -4,25 +4,27 @@ use ieee.std_logic_unsigned.all;
 use ieee.numeric_std.all;
 use ieee.std_logic_textio.all;
 
-entity lfsr24 is
-    port (
-          Clk:      in std_logic;
-          one:      in std_logic;
-          tick:     in std_logic;
-          coreCount:      in std_logic_vector(6 downto 0);
-          data:     out std_logic
-          );
+entity lfsr24 is port (
+    Clk:            in std_logic;
+    one:            in std_logic;
+    tick:           in std_logic;
+    coreCount:      in std_logic_vector(6 downto 0);
+    data:           out std_logic
+    );
 end;
 
 architecture behav of lfsr24 is
-    signal lfsr_p, lfsr_n : std_logic_vector(23 downto 0);
-    signal count_i : integer range 0 to 127; 
-    signal rot: std_logic;
+
+    signal lfsr_p:      std_logic_vector(23 downto 0);
+    signal lfsr_n:      std_logic_vector(23 downto 0);
+    signal count_i:     integer range 0 to 127;
+    signal rot:         std_logic;
+
 begin
 
     count_i <= to_integer(unsigned(coreCount));
     rot <= '1' when count_i < 24 else '0';
-    
+
     process (count_i, lfsr_p)
     begin
         data <= lfsr_p(23);
@@ -32,16 +34,14 @@ begin
             data <= lfsr_p(15);
         end if;
     end process;
-    
+
     process (Clk)
     begin
         if rising_edge(Clk) then
             lfsr_p <= lfsr_n;
         end if;
     end process;
-    
-    
-    -- priority : one, tick, rot
+
     process (lfsr_p, tick, one, rot)
     begin
         lfsr_n <= lfsr_p;
@@ -60,8 +60,6 @@ begin
             lfsr_n(15 downto 8) <= lfsr_p(14 downto 8) & lfsr_p(23);
             lfsr_n(23 downto 16) <= lfsr_p(22 downto 16) & lfsr_p(7);
         end if;
-    end process;    
-    
+    end process;
 
 end;
-
