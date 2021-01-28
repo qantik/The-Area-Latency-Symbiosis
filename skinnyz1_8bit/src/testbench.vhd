@@ -10,7 +10,7 @@ entity testbench is
 end testbench;
 
 
-architecture tb of testbench is  
+architecture tb of testbench is
 
     constant quarter:           time := 25 ns;
     constant clkphase:          time := 50 ns;
