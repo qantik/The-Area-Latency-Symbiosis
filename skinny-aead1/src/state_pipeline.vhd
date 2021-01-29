@@ -26,97 +26,97 @@ end entity state_pipeline;
 
 architecture behav of state_pipeline is
 
-signal st_p, st_n: std_logic_vector(127 downto 0); 
-signal sbox_in : std_logic;
+    signal st_p, st_n: std_logic_vector(127 downto 0); 
+    signal sbox_in : std_logic;
 
 
 
 
-procedure rotate (
-	variable s : inout std_logic_vector(127 downto 0);
-	variable b:	in std_logic
-	) is
-	begin
-		s := s(126 downto 0) & b;
-	end rotate;
+    procedure rotate (
+        variable s : inout std_logic_vector(127 downto 0);
+        variable b:	in std_logic
+        ) is
+        begin
+            s := s(126 downto 0) & b;
+        end rotate;
 
-procedure swap (
-	variable a: 	inout std_logic; 
-	variable b:		inout std_logic
-	) is
-		variable tmp : std_logic;
-	begin
-		tmp := a;
-		a := b;
-		b := tmp;
-	end swap;
+    procedure swap (
+        variable a: 	inout std_logic; 
+        variable b:		inout std_logic
+        ) is
+            variable tmp : std_logic;
+        begin
+            tmp := a;
+            a := b;
+            b := tmp;
+        end swap;
 
 begin
 
-SBoxIN <= st_p(7 downto 0);
+    SBoxIN <= st_p(7 downto 0);
 
-process (Clk)
-begin
-	if Clk'event and Clk = '1' then
-		st_p <= st_n;
-	end if;
-end process;
+    process (Clk)
+    begin
+        if Clk'event and Clk = '1' then
+            st_p <= st_n;
+        end if;
+    end process;
 
 
 
-process (st_p, newbit, keybit, SboxOUT, MCout, store_sbox, swap_ctrl, store_mc, init, rc_bit, add_key)
-	variable s : std_logic_vector(127 downto 0);
-	variable nextbit:	std_logic;
-begin
-    s := st_p;
+    process (st_p, newbit, keybit, SboxOUT, MCout, store_sbox, swap_ctrl, store_mc, init, rc_bit, add_key)
+        variable s : std_logic_vector(127 downto 0);
+        variable nextbit:	std_logic;
+    begin
+        s := st_p;
+            
+        -- subbyte (expect the last bit)
+        if store_sbox = '1' then
+            s(7 downto 0) := SboxOUT;
+        end if;
         
-    -- subbyte (expect the last bit)
-    if store_sbox = '1' then
-        s(7 downto 0) := SboxOUT;
-    end if;
-    
-    -- add round const
-    s(7) := s(7) xor rc_bit;
-    
-    
-    -- add key
-    if add_key = '1' then
-        s(7) := s(7) xor keybit;
-    end if;
-    
-    -- shiftRow
-    if swap_ctrl(2) = '1' then
-        swap(s(127 - 96), s(127 - 120));
-    end if;
-    if swap_ctrl(1) = '1' then
-        swap(s(127 - 104), s(127 - 120)); 
-    end if;
-    if swap_ctrl(0) = '1' then
-        swap(s(127 - 112), s(127 - 120)); 
-    end if;
-    
-    -- mixColumn 
-    MCin <= s(127) & s(95) & s(63) & s(31);
-    if store_mc = '1' then
-        s(127) := MCout(3);
-        s(95) := MCout(2);
-        s(63) := MCout(1);
-        s(31) := MCout(0);
-    end if;
-    
-    
+        -- add round const
+        s(7) := s(7) xor rc_bit;
         
-    CT <= s(127);
-    
-    if init = '1' then
-        nextbit := newbit;
-    else
-        nextbit := s(127);
-    end if;
-	rotate(s, nextbit);
-	
-	st_n <= s;
-end process;
+        
+        -- add key
+        if add_key = '1' then
+            s(7) := s(7) xor keybit;
+        end if;
+        
+        -- shiftRow
+        if swap_ctrl(2) = '1' then
+            swap(s(127 - 96), s(127 - 120));
+        end if;
+        if swap_ctrl(1) = '1' then
+            swap(s(127 - 104), s(127 - 120)); 
+        end if;
+        if swap_ctrl(0) = '1' then
+            swap(s(127 - 112), s(127 - 120)); 
+        end if;
+        
+        -- mixColumn 
+        MCin <= s(127) & s(95) & s(63) & s(31);
+        if store_mc = '1' then
+            s(127) := MCout(3);
+            s(95) := MCout(2);
+            s(63) := MCout(1);
+            s(31) := MCout(0);
+        end if;
+        
+        
+            
+        CT <= s(127);
+        
+        if init = '1' then
+            nextbit := newbit;
+        else
+            nextbit := s(127);
+        end if;
+        rotate(s, nextbit);
+        
+        st_n <= s;
+    end process;
 
 end architecture behav;
 

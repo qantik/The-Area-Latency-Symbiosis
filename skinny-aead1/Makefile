@@ -11,7 +11,7 @@ VHDL_SRCS   = \
 				$(SRC_PATH)/sbox.vhd \
 				$(SRC_PATH)/mix_col_slice.vhd \
 				$(SRC_PATH)/skinny.vhd \
-				$(SRC_PATH)/a2.vhd \
+				$(SRC_PATH)/skinny_aead.vhd \
 				$(SRC_PATH)/aead_tb.vhd
 
 TB_MODULE   = skinny_aead_tb

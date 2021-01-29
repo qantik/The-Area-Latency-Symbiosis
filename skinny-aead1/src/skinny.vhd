@@ -1,6 +1,5 @@
 library ieee;
 use ieee.std_logic_1164.all;
- 
 use ieee.numeric_std.all;
 use std.textio.all;
 use work.all;
@@ -28,17 +27,12 @@ end entity SKINNY;
 
 
 architecture behav of SKINNY is
- 
-    
+
     signal SboxOUT:         std_logic_vector(7 downto 0);
     signal SboxIN:          std_logic_vector(7 downto 0);
     signal roundkeybit:     std_logic;
-    
     signal MCin:            std_logic_vector(3 downto 0);
     signal MCout:           std_logic_vector(3 downto 0);
-    
-  
-    
     signal key0:            std_logic;  
     signal key1:            std_logic;
     signal key2:            std_logic;
@@ -61,6 +55,4 @@ begin
     roundkeybit <= key0 xor key1 xor key2;
 
 
-
 end architecture behav;
-

@@ -1,6 +1,5 @@
 library ieee;
 use ieee.std_logic_1164.all;
- 
 use ieee.numeric_std.all;
 use std.textio.all;
 use work.all;
@@ -21,7 +20,7 @@ architecture behav of lfsr is
 
 begin
 
-rcon <= rc;
+    rcon <= rc;
 
     process (Rst, Clk)
     begin
