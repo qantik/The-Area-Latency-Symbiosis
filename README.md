@@ -17,7 +17,7 @@ python3, gcc, g++, GHDL (https://github.com/ghdl/ghdl)
 
 **Details**
 
-Each folder (except saeaes, saeaes8) contains a Makefile which can be used to run the testbench with GHDL. This archive does not contain the scripts that are used with Synopsys tools. For comparison, implementors are encouraged to use the code to extract timing/power metrics on their own setup.
+Each folder given below contains a Makefile which can be used to run the testbench with GHDL. This archive does not contain the scripts that are used with Synopsys tools.
 
 
 Following folders contain encryption-only block cipher implementations:  
@@ -43,8 +43,5 @@ skinny-aead1    = SKINNY-AEAD M1 (bit-serial)
 skinny-aead8    = SKINNY-AEAD M1 (byte-serial)  
 sundae          = SUNDAE-GIFT-96 (bit-serial)  
 sundae4         = SUNDAE-GIFT-96 (nibble-serial)  
-
-
-
 
 
