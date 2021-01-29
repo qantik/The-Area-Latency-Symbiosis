@@ -47,13 +47,6 @@ begin
         end if;
     end process;
 
-    --sbox_sel <= '1' when count(2 downto 0) = "000" else '0';
-
-    -- control logic for MixColumn 
-    --notLSB <= '0' when ctr(2 downto 0) = "111" else '1';
-    --Poly <= '0' when (ctr(2 downto 1) = "00" or ctr(2 downto 0) = "010" or ctr(2 downto 0) = "101") else '1';
-    --mctrigger <= '1' when ctr(2 downto 0) = "000" else '0';
-
 process (round, count, rc)
 	variable round_i : integer range 0 to 63;
 	variable count_i : integer range 0 to 15;
